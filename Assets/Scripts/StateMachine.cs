@@ -4,15 +4,10 @@ using UnityEngine;
 
 public class StateMachine : MonoBehaviour
 {
-    public Transform player;
-
-    private RandomColour randomColour;
-    
     public enum States
     {
         Run,
         Patrol,
-        Idle,
     }
 
     public States state = States.Run;
@@ -20,7 +15,6 @@ public class StateMachine : MonoBehaviour
     private void Start()
     {
         NextState();
-        randomColour = GetComponent<RandomColour>();
     }
 
     void NextState()
@@ -33,27 +27,8 @@ public class StateMachine : MonoBehaviour
             case States.Patrol:
                 StartCoroutine(PatrolState());
                 break;
-            case States.Idle:
-                StartCoroutine(IdleState());
-                break;
         }
     }
-
-    IEnumerator IdleState()
-    {
-        float startTime = Time.time;
-        while (state == States.Idle)
-        {
-            randomColour.PickRandom();
-            yield return new WaitForSeconds(0.1f);
-            if(Time.time - startTime > 3f) 
-            {
-                state = States.Patrol;
-            }
-        } 
-        NextState();
-    }
-    
     
     IEnumerator RunState()
     {
@@ -70,7 +45,7 @@ public class StateMachine : MonoBehaviour
             
             if(Time.time - startTime > 3f) 
             {
-                state = States.Idle;
+                state = States.Patrol;
             }
             yield return null;
         }
@@ -82,15 +57,7 @@ public class StateMachine : MonoBehaviour
         while(state == States.Patrol)
         {
             transform.rotation *= Quaternion.Euler(0f,50f * Time.deltaTime,0f);
-            Vector3 directionToPlayer = player.position - transform.position;
-            directionToPlayer.Normalize();
-            //-1 to 1
-            //Dot product parameters have to be "normalized"
-            float result = Vector3.Dot(transform.right, directionToPlayer);
-            if (result > 0.95f)
-            {
-                state = States.Run;
-            }
+
             yield return null;
         }
         NextState();
