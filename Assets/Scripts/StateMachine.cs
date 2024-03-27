@@ -4,8 +4,12 @@ using UnityEngine;
 
 public class StateMachine : MonoBehaviour
 {
+    public Transform player;
+    private RandomColour randomColour;
+    
     public enum States
     {
+        Idle,
         Run,
         Patrol,
     }
@@ -14,6 +18,7 @@ public class StateMachine : MonoBehaviour
 
     private void Start()
     {
+        randomColour = GetComponent<RandomColour>();
         NextState();
     }
 
@@ -27,8 +32,28 @@ public class StateMachine : MonoBehaviour
             case States.Patrol:
                 StartCoroutine(PatrolState());
                 break;
+            case States.Idle:
+                StartCoroutine(IdleState()); 
+                break;
         }
     }
+
+    IEnumerator IdleState()
+    {
+        float startTime = Time.time;
+        while (state == States.Idle)
+        {
+           //Change to random colours
+           randomColour.SlideColour(); 
+            if(Time.time - startTime > 3f) 
+            {
+                state = States.Patrol;
+            }
+            yield return null;
+        }
+        NextState();
+    }
+    
     
     IEnumerator RunState()
     {
@@ -45,7 +70,7 @@ public class StateMachine : MonoBehaviour
             
             if(Time.time - startTime > 3f) 
             {
-                state = States.Patrol;
+                state = States.Idle;
             }
             yield return null;
         }
@@ -58,6 +83,19 @@ public class StateMachine : MonoBehaviour
         {
             transform.rotation *= Quaternion.Euler(0f,50f * Time.deltaTime,0f);
 
+            Vector3 directionToPlayer = player.position - transform.position;
+            directionToPlayer.Normalize();
+            // 1 to -1
+            // 1 facing same direction
+            // 0 on a right angle
+            // -1 opposite
+            float result = Vector3.Dot(transform.right, directionToPlayer);
+
+            if (result > 0.95f)
+            {
+                state = States.Run;
+            }
+            
             yield return null;
         }
         NextState();
